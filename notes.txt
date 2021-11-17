@@ -1,0 +1,2 @@
+Formed modules:
+-Board 1: 0

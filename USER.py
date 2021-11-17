@@ -1,7 +1,5 @@
 import random
 import time
-
-import DAC
 from Lib import RRAM
 
 
@@ -49,7 +47,6 @@ def read(pyterminal, level, number):
                 addr = row*256 + col
                 response = RRAM.read_lane(pyterminal, str(addr), '0x1', False)
                 print(f'{addr:>6} : {response:>10}')
-
 
 def calibrate_VTGT_BL(pyterminal, row, col):
     """ Calibrate VTGT_BL for the decoder reference levels are between '0xFFFF'~'0x4000'
@@ -275,6 +272,33 @@ def test_byte_cim(pyterminal, row, col, num):
         print(f'| {hex(n):>4} | {readouts[n]:>7} | {goldens[n]:>6} | {goldens[n]-readouts[n]:>10} |')
     print('----------------------------------------')
 
+def parse_endurance_params(pyterminal, args):
+    opts, args = getopt.getopt(sys.argv, "s:r:c:n:", ["startAddress=", "nRows=", "nCols=", "nCycles="])
+
+def test_endurance(pyterminal, addr=0, nrow=1, ncol=1, ncycles=-1):
+    """
+    Main method for performing endurance testing of the RRAM cells through set/reset cycles
+
+    :param pyterminal: input pyterminal object connected to the RRAM test board
+    :type pyterminal: PyTerminal
+    :param addr: starting address to test endurance on [0, last address in RRAM array] #TODO: any way to see this information with status?
+    :type addr: int
+    :param nrow: number of rows after starting address to endurance test [1, number of remaining rows in RRAM array]
+    :param ncol: number of columns after starting address to endurance test [1, number of remaining columns in RRAM array]
+    :param ncycles: number of times to perform set/reset operations, -1 for infinite otherwise [1, inf)
+    """
+    address = str(0)
+    start_time = time.time_ns()
+    RRAM.set(pyterminal, 'cell', address, False)
+    set_value = RRAM.read_lane(pyterminal, address, '0x1', False)
+    RRAM.reset(pyterminal, 'cell', address, False)
+    reset_value = RRAM.read_lane(pyterminal, address, '0x1', False)
+    end_time = time.time_ns()
+    # Print the result nicely
+    print('---------------------------------------------')
+    print('| Set Value | Reset Value | Cycle Time (ns) |')
+    print('---------------------------------------------')
+    print(f'| {set_value:>9} | {reset_value:>11} | {end_time-start_time:>15} |')
 
 def unknown(parameters):
     """ Print out the unknown command
@@ -299,4 +323,5 @@ def decode(pyterminal, parameters):
     elif parameters[1] == 'test_write_byte'  : test_write_byte  (pyterminal, parameters[2], parameters[3])
     elif parameters[1] == 'test_bit_cim'     : test_bit_cim     (pyterminal, parameters[2], parameters[3])
     elif parameters[1] == 'test_byte_cim'    : test_byte_cim    (pyterminal, parameters[2], parameters[3], parameters[4])
+    elif parameters[1] == 'test_endurance'   : test_endurance   (pyterminal)
     else: unknown(parameters)

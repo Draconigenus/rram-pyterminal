@@ -8,7 +8,7 @@ import CommandMap as CM
 VID = '0x03EB'    # Atmel
 PID = '0x204B'    # LUFA USB to Serial Demo Application
 BAUDRATE = 115200 #
-TIMEOUT = 3      # Seconds
+TIMEOUT = 4      # Seconds
 
 class PyTerminal:
     def __init__(self):
