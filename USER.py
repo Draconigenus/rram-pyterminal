@@ -275,7 +275,28 @@ def test_byte_cim(pyterminal, row, col, num):
 def parse_endurance_params(pyterminal, args):
     opts, args = getopt.getopt(sys.argv, "s:r:c:n:", ["startAddress=", "nRows=", "nCols=", "nCycles="])
 
-def test_endurance(pyterminal, addr=0, nrow=1, ncol=1, ncycles=-1):
+def time_commands(pyterminal, command):
+    """
+    simple method to time operations. Note that this also includes the time for python code to execute
+
+    :param pyterminal: current connected COM port
+    :param command: command to run through the terminal, separate multiple commands with ","
+    :return: None
+    """
+    #time and execute commands
+    totalTime = 0
+    for subCommand in command.split(","):
+        subCommand = subCommand.strip()
+        print("#####executing:", subCommand)
+        startTime = time.time_ns()
+        pyterminal.decode_command(subCommand)
+        endTime = time.time_ns()
+        totalTime += endTime-startTime
+    print(f"total time: {totalTime}ns")
+
+
+
+def test_endurance(pyterminal, addr=0, nCells=1):
     """
     Main method for performing endurance testing of the RRAM cells through set/reset cycles
 
@@ -287,18 +308,64 @@ def test_endurance(pyterminal, addr=0, nrow=1, ncol=1, ncycles=-1):
     :param ncol: number of columns after starting address to endurance test [1, number of remaining columns in RRAM array]
     :param ncycles: number of times to perform set/reset operations, -1 for infinite otherwise [1, inf)
     """
-    address = str(0)
-    start_time = time.time_ns()
-    RRAM.set(pyterminal, 'cell', address, False)
-    set_value = RRAM.read_lane(pyterminal, address, '0x1', False)
-    RRAM.reset(pyterminal, 'cell', address, False)
-    reset_value = RRAM.read_lane(pyterminal, address, '0x1', False)
-    end_time = time.time_ns()
-    # Print the result nicely
-    print('---------------------------------------------')
-    print('| Set Value | Reset Value | Cycle Time (ns) |')
-    print('---------------------------------------------')
-    print(f'| {set_value:>9} | {reset_value:>11} | {end_time-start_time:>15} |')
+    address_dict = {}
+    # for address in range(int(addr), int(addr) + int(nCells)):
+    #     address = str(address)
+    #     address_dict[address] = {}
+    #     start_time = time.time_ns()
+    #     RRAM.set(pyterminal, 'cell', address, False)
+    #     address_dict[address]['set_value'] = RRAM.read_lane(pyterminal, address, '0x1', False)
+    #     RRAM.reset(pyterminal, 'cell', address, False)
+    #     address_dict[address]['reset_value'] = RRAM.read_lane(pyterminal, address, '0x1', False)
+    #     end_time = time.time_ns()
+    #     address_dict[address]['time'] = end_time - start_time
+
+
+
+    #set
+    # for address in range(int(addr), int(addr) + int(nCells)):
+    #     address = str(address)
+    #     address_dict[address] = {}
+    #     start_time = time.time_ns()
+    #     RRAM.set(pyterminal, 'cell', address, False)
+    #     end_time = time.time_ns()
+    #     address_dict[address]['time'] = end_time - start_time
+    #
+    # #read set result
+    # for address in range(int(addr), int(addr) + int(nCells)):
+    #     address = str(address)
+    #     start_time = time.time_ns()
+    #     address_dict[address]['set_value'] = RRAM.read_lane(pyterminal, address, '0x1', False)
+    #     end_time = time.time_ns()
+    #     address_dict[address]['time'] += end_time - start_time
+    #
+    # # reset
+    # for address in range(int(addr), int(addr) + int(nCells)):
+    #     address = str(address)
+    #     start_time = time.time_ns()
+    #     RRAM.reset(pyterminal, 'cell', address, False)
+    #     end_time = time.time_ns()
+    #     address_dict[address]['time'] += end_time - start_time
+    #
+    # # read reset result
+    # for address in range(int(addr), int(addr) + int(nCells)):
+    #     address = str(address)
+    #     start_time = time.time_ns()
+    #     address_dict[address]['reset_value'] = RRAM.read_lane(pyterminal, address, '0x1', False)
+    #     end_time = time.time_ns()
+    #     address_dict[address]['time'] += end_time - start_time
+    #
+    # # Print the result nicely
+    # print('---------------------------------------------')
+    # print('| Address | Set Value | Reset Value | Cycle Time (ns) |')
+    # print('---------------------------------------------')
+    # for address, data in address_dict.items():
+    #     print(f'| {address:>7} | {data["set_value"]:>9} | {data["reset_value"]:>11} | {data["time"]:>15} |')
+    #
+    # total_time = 0
+    # for address in address_dict.keys():
+    #     total_time += address_dict[address]['time']
+    # print("total time:", total_time)
 
 def unknown(parameters):
     """ Print out the unknown command
@@ -323,5 +390,6 @@ def decode(pyterminal, parameters):
     elif parameters[1] == 'test_write_byte'  : test_write_byte  (pyterminal, parameters[2], parameters[3])
     elif parameters[1] == 'test_bit_cim'     : test_bit_cim     (pyterminal, parameters[2], parameters[3])
     elif parameters[1] == 'test_byte_cim'    : test_byte_cim    (pyterminal, parameters[2], parameters[3], parameters[4])
-    elif parameters[1] == 'test_endurance'   : test_endurance   (pyterminal)
+    elif parameters[1] == 'test_endurance'   : test_endurance   (pyterminal, parameters[2], parameters[3])
+    elif parameters[1] == "time_commands"     : time_commands     (pyterminal, " ".join(parameters[2:]))
     else: unknown(parameters)
