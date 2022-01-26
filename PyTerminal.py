@@ -1,3 +1,4 @@
+import time
 import serial
 import CommandMap as CM
 import MNIST, TEST, USER
