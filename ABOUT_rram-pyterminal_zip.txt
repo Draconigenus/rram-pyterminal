@@ -1,0 +1,2 @@
+The zip file in this repo names rram-pyterminal.zip is to be used as a reference while
+adapting to the new API for the RRAM testing boards.
