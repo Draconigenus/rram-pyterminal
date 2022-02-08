@@ -1,9 +1,18 @@
-import time
 import serial
-import CommandMap as CM
-import MNIST, TEST, USER
-import DEMO, UTF8, RRAM, VECTOR, DNN
-import EEPROM, PM, LED, DF, DAC, TC, BOARD
+import Lib.CommandMap as CM
+import Applications.MNIST, Lib.TEST, USER
+import Lib.DEMO as DEMO
+import Lib.UTF8 as UTF8
+import Lib.RRAM as RRAM
+import Lib.VECTOR as VECTOR
+import Lib.DNN as DNN
+import Board.EEPROM as EEPROM
+import Board.PM as PM
+import Board.LED as LED
+import Board.DF as DF
+import Board.DAC as DAC
+import Board.TC as TC
+import Board.BOARD as BOARD
 
 VID = '0x03EB'    # Atmel
 PID = '0x204B'    # LUFA USB to Serial Demo Application
@@ -20,15 +29,14 @@ def connect():
         if port.vid == int(VID, 0) and port.pid == int(PID, 0):
             global ser
             ser = serial.Serial(port.name, baudrate=BAUDRATE, timeout=TIMEOUT)
-            try:
-                version = BOARD.version(False)
-                print('[INFO] Evaluation board with version ' + version + ' connected @ ' + port.name)
-                # Fix the problem so that we don't have to init the TC every time we relaunch PyTerminal
-                ser.write(str.encode(CM.CM_RRAM + ' \n'))
-                return True
-            except:
-                print('[ERROR] Unable to retrieve board version')
-                break
+
+            # print (port.name)
+            version = BOARD.version(False)
+            print('[INFO] Evaluation board with version ' + version + ' connected @ ' + port.name)
+            # Fix the problem so that we don't have to init the TC every time we relaunch PyTerminal
+            ser.write(str.encode(CM.CM_RRAM + ' \n'))
+            return True
+
     return False
 
 def alive():

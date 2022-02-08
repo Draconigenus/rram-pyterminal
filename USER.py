@@ -1,4 +1,6 @@
 import PyTerminal as PT
+from resistance import measure_resistance
+from endurance import endurance
 
 def example_function():
     """ Example function
@@ -14,4 +16,6 @@ def decode(parameters):
         parameters (list): Command in List form.
     """
     if   parameters[1] == 'example_function'  : example_function()
+    elif parameters[1] == 'resistance'        : measure_resistance (parameters[2], parameters[3])
+    elif parameters[1] == 'endurance'         : endurance (parameters[2], parameters[3])
     else: PT.unknown(parameters)
