@@ -117,7 +117,7 @@ def SAF(module):
     batchSize = 1
 
     #array representation of status/health of cells in module
-    status = np.zeros(Shape=(256, 256))
+    status = np.ndarray(shape=(256, 256), dtype=dict)
 
     #start timer
     start_time = time.time()
@@ -127,15 +127,16 @@ def SAF(module):
 
     cycle_time = time.time_ns() - start_time
     #check the cells
-    for row in status:
-        for col in status[row]:
+    for row in range(len(status)):
+        for col in range(len(status[row])):
             address = row * 256 + col
-            if status[row][col] == 0:
-                status[row][col] = {}
-            status['saf'], status['lrs'], status['hrs'] = check(address)
+            if status[row][col] == None:
+                status[row][col] = dict()
+            status[row][col]['saf'], status[row][col]['lrs'], status[row][col]['hrs'] = check(address)
+        print("Read row:", row)
     read_time = time.time() - start_time
     results = {"module": module, "cycle time": cycle_time, "read time": read_time, "status": status}
-    np.save("saf_m" + module + "_c" + numCycles, results)
+    np.save("saf_m" + str(module) + "_c" + str(numCycles), results)
 
 
 

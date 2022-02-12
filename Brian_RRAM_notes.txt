@@ -1,0 +1,133 @@
+PM list
+DEMO analyze
+DEMO load 0
+RRAM module set 2
+RRAM calibrate_VRef 2 120 800 5
+> weird #s -> new array
+
+RRAM conf_ADC 3 26 0x7FFF
+> give calibrate #s
+> these #s are DAC codes I believe.
+
+RRAM sweep_VRef 2 0 900 4
+RRAM list_VRef 2
+
+--------------------------
+Want high resolution around the cell
+> not 120mV separation
+--------------------------
+remember:
+v-target-bitline
+set VTGT.BL
+--------------------------
+
+DAC set 300 VTGT_BL
+DAC list
+
+RRAM conf_read 1100 1
+RRAM read_lane [0..#bits or lanes]
+RRAM read_lane 0 0x001
+
+RRAM conf_form 4000 1700 100 1
+RRAM form cell 0
+
+--------------------------
+
+if no cell is selected,
+should see all comparators references above "VTGT_BL" tripped.
+
+--------------------------
+
+RRAM conf_reset	2800 2800 200 80
+RRAM reset cell 0
+
+--------------------------
+
+RRAM conf_set 2200 2200 100 20
+RRAM set cell 0
+
+--------------------------
+
+RRAM calibrate_VRef 0 120 800 5
+RRAM conf_ADC 3 5 0x7FFF
+RRAM sweep_VRef 0 0 900 4
+RRAM list_VRef 0
+
+--------------------------
+
+RRAM module set 1
+RRAM conf_form 3200 1600 20 2
+RRAM conf_form 4000 1700 100 1
+RRAM form module 1
+
+--------------------------
+
+RRAM module set 0
+RRAM calibrate_VRef 0 120 800 5
+
+--------------------------
+--------------------------
+
+PM enable_all
+PM save
+PM list
+
+Voltage pins will show 0V if not enabled ...
+
+--------------------------
+
+RRAM module set 2
+
+RRAM conf_form 4000 1700 100 1
+RRAM form module 0
+
+RRAM conf_set 2200 2200 100 20
+RRAM set cell 0
+
+DAC set 300 VTGT_BL
+DAC list
+
+RRAM calibrate_VRef 120 800 5
+> returns [offset, step]
+RRAM conf_ADC 3 10 0x7FFF
+RRAM sweep_VRef 0 900 4
+RRAM list_VRef 
+
+RRAM adc get hbias
+RRAM adc get cal
+RRAM adc get comp
+RRAM adc get offset
+RRAM adc get step
+
+RRAM conf_read 5
+RRAM read_lane 0 0x001
+
+RRAM conf_reset	2800 2800 200 80
+RRAM reset cell 0
+
+--------------------------
+
+RRAM conf_set 2200 2200 100 20
+RRAM conf_reset	2800 2800 200 80
+RRAM conf_read 5
+
+RRAM set cell 32
+RRAM read_lane 32 0x001
+RRAM reset cell 32
+RRAM read_lane 32 0x001
+
+--------------------------
+
+RRAM calibrate_VTGT_BL
+
+--------------------------
+
+super important to get VTGT_BL correct.
+want big difference between HRS and LRS
+
+
+
+
+
+
+
