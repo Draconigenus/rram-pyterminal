@@ -136,7 +136,7 @@ def SAF(module):
         print("Read row:", row)
     read_time = time.time() - start_time
     results = {"module": module, "cycle time": cycle_time, "read time": read_time, "status": status}
-    np.save("saf_m" + str(module) + "_c" + str(numCycles), results)
+    np.save("Data/saf_m" + str(module) + "_c" + str(numCycles), results)
 
 
 

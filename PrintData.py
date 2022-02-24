@@ -20,7 +20,7 @@ def main(filename):
     stuck_percent = round((float(num_stuck) / (256 ** 2)) * 100, ndigits=4)
     status_display = matplotlib.pyplot.pcolormesh(status)
     matplotlib.pyplot.title("%stuck=" + str(stuck_percent))
-    matplotlib.pyplot.savefig("saf_initialTesting.png")
+    matplotlib.pyplot.savefig("Plots/" + filename.split(sep="/")[-1][:-4] + ".png")
 
 if __name__ == "__main__":
     main(sys.argv[1])
