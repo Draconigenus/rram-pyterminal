@@ -53,6 +53,12 @@ RRAM conf_ADC 3 5 0x7FFF
 RRAM sweep_VRef 0 0 900 4
 RRAM list_VRef 0
 
+
+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
+
+
+
+
 --------------------------
 
 RRAM module set 1
@@ -129,5 +135,12 @@ want big difference between HRS and LRS
 
 
 
-
+Modules:
+20: Form 4000
+12: Form 3500
+16: Form 3000
+17: Form 3250 ***BAD***
+21: Form 3400 ***BAD***
+24: Form 3250
+26: Form 3100
 
