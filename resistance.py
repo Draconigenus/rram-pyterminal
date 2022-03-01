@@ -101,7 +101,7 @@ def references(module, VTGT):
             refs = np.array(refs[15:])
 
             ret[(offset, step)] = refs
-            print (refs)
+            #print (refs)
 
     Board.DAC.set_source(value=str(VTGT), target='VTGT_BL', verbal=False)
     #########################

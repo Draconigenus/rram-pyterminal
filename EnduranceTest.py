@@ -147,6 +147,9 @@ def MR(module, numSamples):
     :return: nothong, saved to npy file
     """
 
+    module = int(module)
+    numSamples = int(numSamples)
+
     #set module
     RRAM.module(action='set', target=str(module), verbal=False)
 
