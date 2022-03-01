@@ -3,6 +3,8 @@ import sys
 import time
 from ctypes import c_int8
 import numpy as np
+import argparse
+import resistance
 
 import Board.DAC
 from Lib import RRAM
@@ -85,13 +87,12 @@ def endurance(module, addr):
 
 ##########################################################
 
-def SAF(module):
+def SAF(module, form_settings="4000 1700 100 1"):
     """
     perform stuck at fault testing on specified module
     :param module: module to test
-    :return:
+    :return: nothing, saved to npy file
     """
-    module = int(module)
 
     RRAM.module(action='set', target=str(module), verbal=False)
 
@@ -138,6 +139,64 @@ def SAF(module):
     results = {"module": module, "cycle time": cycle_time, "read time": read_time, "status": status}
     np.save("Data/saf_m" + str(module) + "_c" + str(numCycles), results)
 
+def MR(module, numSamples):
+    """
+    check resistance variations of a module that was already SAF tested.
+    :param module: module number to compute resistances for
+    :param numSamples: number of resistance samples in the module to collect
+    :return: nothong, saved to npy file
+    """
+
+    #set module
+    RRAM.module(action='set', target=str(module), verbal=False)
+
+    # set read, set, reset parameters TODO: make set and reset voltages input
+    RRAM.conf_read(cycle='5', verbal=False)
+    RRAM.conf_set(AVDD_WR=str(2200), AVDD_WL=str(1200), cycle=str(16), times=str(10), verbal=False)
+    RRAM.conf_reset(AVDD_WR=str(2800), AVDD_WL=str(2800), cycle=str(100), times=str(10), verbal=False)
+
+    # set weird adc settings to 0
+    RRAM.adc(action='set', action_type='cal', target='0', verbal=False)
+    RRAM.adc(action='set', action_type='hbias', target='0', verbal=False)
+
+    # set target bitline voltage 2-200mV
+    Board.DAC.set_source(value="200", target='VTGT_BL', verbal=False)
+
+    #generate a lot of voltage references
+    references = resistance.references(module, VTGT=200)
+
+    resistances = {}
+
+    results = {"module": module, "numSamples": numSamples, "resistances": resistances}
+
+    np.save("Data/delta_res_m" + str(module) + "_s" + numSamples, results)
+
+    blockSize = int(256*256/numSamples)
+
+    print("Address\t(Row, Col)\t|\tLRS\t|\tHRS\t|\tDelta")
+
+    for sample in range(0, numSamples):
+        addr = np.random.randint(low=sample * blockSize, high=min(sample + 1 * blockSize, 256 * 256), dtype=int)
+        row = addr // 256
+        col = addr % 256
+        #set
+        RRAM.set(level="cell", number=addr, verbal=False)
+        LRS = resistance.resistance(addr, references, VTGT=200)
+        #reset
+        RRAM.reset(level="cell", number=addr, verbal=True)
+        HRS = resistance.resistance(addr, references, VTGT=200)
+        resistances[addr] = {"LRS": LRS, "HRS": HRS, "Delta": HRS-LRS}
+
+        if sample % 100 == 0:
+            np.save("Data/delta_res_m" + str(module) + "_s" + numSamples, results)
+
+        print(addr + "\t" + f"({row},{col})" + "\t|\t" + LRS + "\t|\t" + HRS + "\t|\t" + HRS - LRS)
+
+    np.save("Data/delta_res_m" + str(module) + "_s" + numSamples, results)
+
+
+
+
 
 
 
@@ -155,5 +214,9 @@ def main(addr=0, nrow=1, ncol=1, ncycles=-1):
     """
 
 def decode(args):
-    # opts, args = getopt.getopt(sys.argv, "t:a:s:r:c:n:", ["test=","area=","startAddress=", "nRows=", "nCols=", "nCycles="])
+    parser = argparse.ArgumentParser()
+    parser.add_argument("module", type)
+    parser.add_argument("-f", "--conf_form", type=int, nargs=4, help="Arguments to pass to conf_form")
+    parser.add_argument("-r", "--")
     if args[0] == "SAF": SAF(args[1])
+
