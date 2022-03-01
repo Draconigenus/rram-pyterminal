@@ -15,6 +15,6 @@ def decode(parameters):
         parameters (list): Command in List form.
     """
     if   parameters[1] == 'example_function'  : example_function()
-    if   parameters[1] == "SAF"               : SAF(*parameters[2:])
-    if   parameters[1] == "MR"                : MR(*parameters[2:])
+    if   parameters[1] == "SAF"               : SAF(parameters[2], parameters[3])
+    if   parameters[1] == "MR"                : MR(parameters[2], parameters[3])
     else: PT.unknown(parameters)
