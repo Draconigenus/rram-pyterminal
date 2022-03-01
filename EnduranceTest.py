@@ -172,7 +172,7 @@ def MR(module, numSamples):
 
     results = {"module": module, "numSamples": numSamples, "resistances": resistances}
 
-    np.save("Data/delta_res_m" + str(module) + "_s" + numSamples, results)
+    np.save("Data/delta_res_m" + str(module) + "_s" + str(numSamples), results)
 
     blockSize = int(256*256/numSamples)
 
@@ -191,11 +191,11 @@ def MR(module, numSamples):
         resistances[addr] = {"LRS": LRS, "HRS": HRS, "Delta": HRS-LRS}
 
         if sample % 100 == 0:
-            np.save("Data/delta_res_m" + str(module) + "_s" + numSamples, results)
+            np.save("Data/delta_res_m" + str(module) + "_s" + str(numSamples), results)
 
         print(f"{addr}" + "\t" + f"({row},{col})" + "\t|\t" + str(LRS) + "\t|\t" + str(HRS) + "\t|\t" + str(HRS - LRS))
 
-    np.save("Data/delta_res_m" + str(module) + "_s" + numSamples, results)
+    np.save("Data/delta_res_m" + str(module) + "_s" + str(numSamples), results)
 
 
 
