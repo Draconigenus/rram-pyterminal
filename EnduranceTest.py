@@ -183,17 +183,17 @@ def MR(module, numSamples):
         row = addr // 256
         col = addr % 256
         #set
-        RRAM.set(level="cell", number=addr, verbal=False)
+        RRAM.set(level="cell", number=str(addr), verbal=False)
         LRS = resistance.resistance(addr, references, VTGT=200)
         #reset
-        RRAM.reset(level="cell", number=addr, verbal=True)
+        RRAM.reset(level="cell", number=str(addr), verbal=True)
         HRS = resistance.resistance(addr, references, VTGT=200)
         resistances[addr] = {"LRS": LRS, "HRS": HRS, "Delta": HRS-LRS}
 
         if sample % 100 == 0:
             np.save("Data/delta_res_m" + str(module) + "_s" + str(numSamples), results)
 
-        print(f"{addr}" + "\t" + f"({row},{col})" + "\t|\t" + str(LRS) + "\t|\t" + str(HRS) + "\t|\t" + str(HRS - LRS))
+        print(str(addr) + "\t" + f"({row}, {col})" + "\t|\t" + str(LRS) + "\t|\t" + str(HRS) + "\t|\t" + str(HRS - LRS))
 
     np.save("Data/delta_res_m" + str(module) + "_s" + str(numSamples), results)
 
