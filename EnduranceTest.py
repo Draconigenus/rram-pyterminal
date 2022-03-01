@@ -193,7 +193,7 @@ def MR(module, numSamples):
         if sample % 100 == 0:
             np.save("Data/delta_res_m" + str(module) + "_s" + numSamples, results)
 
-        print(addr + "\t" + f"({row},{col})" + "\t|\t" + LRS + "\t|\t" + HRS + "\t|\t" + HRS - LRS)
+        print(f"{addr}" + "\t" + f"({row},{col})" + "\t|\t" + str(LRS) + "\t|\t" + str(HRS) + "\t|\t" + str(HRS - LRS))
 
     np.save("Data/delta_res_m" + str(module) + "_s" + numSamples, results)
 
