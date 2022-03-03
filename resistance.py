@@ -6,6 +6,7 @@ import numpy as np
 import sys
 
 import Board.DAC
+import DAC
 from Lib import RRAM
 
 def resistance(addr, refs, VTGT):
@@ -33,7 +34,7 @@ def resistance(addr, refs, VTGT):
         Rcell = VTGT / ((VBL - VTGT) / Rsense)
         return Rcell
 
-    def _compare():
+    def _compare(numEnabled):
         #################################################
         '''
         rds = []
@@ -43,7 +44,12 @@ def resistance(addr, refs, VTGT):
         rd = np.min(rd)
         '''
         #################################################
-        rd = int( RRAM.read_lane(address=str(addr), data='0x001', verbal=False), 16)
+        if numEnabled == 0:
+            data = "0x000"
+        else:
+            data = "0x001"
+        DAC.set_source(value=str(200), target="VTGT_BL", verbal=False)
+        rd = int( RRAM.read_lane(address=str(addr), data=data, verbal=False), 16)
         #################################################
         comp = np.zeros(15)
         for bit in range(15):
@@ -52,8 +58,25 @@ def resistance(addr, refs, VTGT):
         #################################################
         return np.array(comp)
 
-    #################################################
-    
+    ##############################################
+
+    ones = []
+    zeros = []
+    for (offset, step) in refs.keys():
+        #################################################
+        RRAM.conf_ADC(offset=str(offset), step=str(step), comp='0x7FFF', verbal=False)
+        #################################################
+        ref = refs[(offset, step)]
+        #################################################
+        comps = _compare(0)
+        for i, _ in enumerate(ref):
+            if comps[i]: zeros.append( ref[i] )
+            else:        ones.append( ref[i] )
+        #################################################
+    VBL_0 = _localize(np.array(ones), np.array(zeros))
+
+    #####################################################
+
     ones = []; zeros = []
     for (offset, step) in refs.keys():
         #################################################
@@ -61,12 +84,13 @@ def resistance(addr, refs, VTGT):
         #################################################
         ref = refs[(offset, step)]
         #################################################
-        comps = _compare()
+        comps = _compare(1)
         for i, _ in enumerate(ref):
             if comps[i]: zeros.append( ref[i] )
             else:        ones.append( ref[i] )
         #################################################
     VBL = _localize(np.array(ones), np.array(zeros))
+    # Rcell = _resistance(VTGT=VBL_0, Rsense=3000, VBL=VBL)
     Rcell = _resistance(VTGT=VTGT, Rsense=3000, VBL=VBL)
     #################################################
     return Rcell

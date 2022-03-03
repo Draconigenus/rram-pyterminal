@@ -87,7 +87,7 @@ def endurance(module, addr):
 
 ##########################################################
 
-def SAF(module, form_settings="4000 1700 100 1"):
+def SAF(module, form_settings=[4000, 1700, 100, 1]):
     """
     perform stuck at fault testing on specified module
     :param module: module to test
@@ -95,6 +95,9 @@ def SAF(module, form_settings="4000 1700 100 1"):
     """
 
     RRAM.module(action='set', target=str(module), verbal=False)
+
+    RRAM.conf_form(*[str(param) for param in form_settings])
+    RRAM.form(level='module', number=0, verbal=False)
 
     #set read, set, reset parameters TODO: make set and reset voltages input
     RRAM.conf_read(cycle='5', verbal=False)
@@ -125,6 +128,9 @@ def SAF(module, form_settings="4000 1700 100 1"):
 
     #cycle the module
     RRAM.set_reset(level='module', number='0', times='1', verbal=False)
+    results = {"module": module,  "status": status,
+               "form_settings": form_settings}
+    np.save("Data/saf_m" + str(module) + "_c" + str(numCycles), results)
 
     cycle_time = time.time_ns() - start_time
     #check the cells
@@ -134,9 +140,11 @@ def SAF(module, form_settings="4000 1700 100 1"):
             if status[row][col] == None:
                 status[row][col] = dict()
             status[row][col]['saf'], status[row][col]['lrs'], status[row][col]['hrs'] = check(address)
+        np.save("Data/saf_m" + str(module) + "_c" + str(numCycles), results)
         print("Read row:", row)
     read_time = time.time() - start_time
-    results = {"module": module, "cycle time": cycle_time, "read time": read_time, "status": status}
+    results["read_time"] = read_time
+    results["cycle_time"] = cycle_time
     np.save("Data/saf_m" + str(module) + "_c" + str(numCycles), results)
 
 def MR(module, numSamples):
@@ -179,15 +187,15 @@ def MR(module, numSamples):
     print("Address\t(Row, Col)\t|\tLRS\t|\tHRS\t|\tDelta")
 
     for sample in range(0, numSamples):
-        addr = np.random.randint(low=sample * blockSize, high=min(sample + 1 * blockSize, 256 * 256), dtype=int)
+        addr = np.random.randint(low=sample * blockSize, high=min((sample + 1) * blockSize, 256 * 256), dtype=int)
         row = addr // 256
         col = addr % 256
         #set
         RRAM.set(level="cell", number=str(addr), verbal=False)
-        LRS = resistance.resistance(addr, references, VTGT=200)
+        LRS = np.round(resistance.resistance(addr, references, VTGT=200), decimals=0)
         #reset
         RRAM.reset(level="cell", number=str(addr), verbal=True)
-        HRS = resistance.resistance(addr, references, VTGT=200)
+        HRS = np.round(resistance.resistance(addr, references, VTGT=200), decimals=0)
         resistances[addr] = {"LRS": LRS, "HRS": HRS, "Delta": HRS-LRS}
 
         if sample % 100 == 0:
@@ -216,10 +224,17 @@ def main(addr=0, nrow=1, ncol=1, ncycles=-1):
     :param ncycles: number of times to perform set/reset operations, -1 for infinite otherwise [1, inf)
     """
 
-def decode(args):
+def decode(argList):
     parser = argparse.ArgumentParser()
-    parser.add_argument("module", type)
+    parser.add_argument("command", help="The method/test you desire to run")
+    parser.add_argument("module", type=int, help="Module to run test on")
     parser.add_argument("-f", "--conf_form", type=int, nargs=4, help="Arguments to pass to conf_form")
-    parser.add_argument("-r", "--")
-    if args[0] == "SAF": SAF(args[1])
+    parser.add_argument("-r", "--resistance",type=int, help="#Cells to measure resistance for")
+    args = parser.parse_args(argList)
+    if args.command == "SAF":
+        if args.conf_form:
+            SAF(args.module, args.conf_form)
+        else:
+            SAF(args.module)
+
 
