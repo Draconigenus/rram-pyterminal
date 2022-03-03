@@ -97,7 +97,7 @@ def SAF(module, form_settings=[4000, 1700, 100, 1]):
     RRAM.module(action='set', target=str(module), verbal=False)
 
     RRAM.conf_form(*[str(param) for param in form_settings])
-    RRAM.form(level='module', number=0, verbal=False)
+    RRAM.form(level='module', number='0', verbal=False)
 
     #set read, set, reset parameters TODO: make set and reset voltages input
     RRAM.conf_read(cycle='5', verbal=False)
