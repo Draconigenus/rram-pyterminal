@@ -12,6 +12,33 @@ def main(filename):
     matplotlib.pyplot.title("%stuck=" + str(stuck_percent))
     matplotlib.pyplot.savefig("Plots/" + filename.split(sep="/")[-1][:-4] + ".png")
 
+def evaluateLRS(filename):
+    object = np.load(file=filename, allow_pickle=True).item()
+    # extract cells
+    LRS = []
+    for addr, data in object["resistances"].items():
+        LRS.append(data["LRS"])
+    print(f"mean: {np.mean(LRS)}, std: {np.std(LRS)}")
+
+
+def evaluateResistance(filename):
+    object = np.load(file=filename, allow_pickle=True).item()
+    #extract cells
+    deltas = []
+    for addr, data in object["resistances"].items():
+        deltas.append(data["Delta"])
+
+    mean = np.mean(deltas)
+    stdev = np.std(deltas)
+
+    trimmed = []
+    for delta in deltas:
+        if abs((delta - mean)) < stdev * 2:
+            trimmed.append(delta)
+    print("Number of samples after trimming: " + str(len(trimmed)))
+    print(f"mean: {np.mean(trimmed)}, std: {np.std(trimmed)}")
+
+
 def getSAFstatus(filename):
     object = np.load(file=filename, allow_pickle=True).item()
     # extract cells

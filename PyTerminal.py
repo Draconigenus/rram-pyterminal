@@ -121,9 +121,12 @@ def decode_command(command):
         elif parameters[0] == "RRAM"  :   RRAM.decode(parameters)
         elif parameters[0] == "VECTOR": VECTOR.decode(parameters)
         elif parameters[0] == "DNN"   :    DNN.decode(parameters)
-        elif parameters[0] == "TEST"  :   TEST.decode(parameters)
-        elif parameters[0] == "USER"  :   USER.decode(parameters)
-        elif parameters[0] == "MNIST" :  MNIST.decode(parameters)
+        elif parameters[0] == "TEST"  :
+            TEST.decode(parameters)
+        elif parameters[0] == "USER"  :
+            USER.decode(parameters)
+        elif parameters[0] == "MNIST" :
+            MNIST.decode(parameters)
         else: unknown(parameters)
 
     # If the atmel is reset, we need to reopen it again
