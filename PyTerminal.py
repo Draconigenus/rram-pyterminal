@@ -28,7 +28,7 @@ def connect():
     for port in list_ports.comports():
         if port.vid == int(VID, 0) and port.pid == int(PID, 0):
             global ser
-            ser = serial.Serial(port.name, baudrate=BAUDRATE, timeout=TIMEOUT)
+            ser = serial.Serial("/dev/" + port.name, baudrate=BAUDRATE, timeout=TIMEOUT)
 
             # print (port.name)
             version = BOARD.version(False)
