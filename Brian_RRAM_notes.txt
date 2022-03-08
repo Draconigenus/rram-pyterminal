@@ -144,7 +144,6 @@ Modules:
 24: Form 3250
 26: Form 3100
 35: Form 3300
-36: Form pulse 50
-
-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
+36: Form pulse 50 (3250)
+37: Form pulse 75 (3250)
 
