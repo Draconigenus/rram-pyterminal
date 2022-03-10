@@ -148,4 +148,6 @@ Modules:
 37: Form pulse 75 (3250)
 40: Form pulse 200 (3250)
 47: Form pulse 5 (3250)
+52: Form pulse 400 (3250)
+63: Form pulse 200 (3250)
 
