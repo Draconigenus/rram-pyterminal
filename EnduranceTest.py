@@ -28,62 +28,76 @@ def check(addr):
     # hrs = resistance(addr, refs, VTGT)
     hrs = int( RRAM.read_lane(address=str(addr), data='0x001', verbal=False), 16)
     #########################################
-    saf = lrs >= hrs
+    dead = lrs >= hrs
     #########################################
-    return saf, lrs, hrs
+    return dead, lrs, hrs
 
-def endurance(module, addr):
+def endurance(module, stop = 1000000, batch_size = 5000, form_settings=None, set_settings = [2200, 1200, 16, 10], reset_settings = [2800, 2800, 100, 10]):
     """
-    runs endurance testing on a specified range of cells and save to endurance.npy
-    :param module: module for target cells
-    :param addr: column for target cells
-    :return: nothing
+    perform endurance testing on specified module
+    :param module: module to test
+    :param stop: total number of R/W cycles to perform on module
+    :param batch_size: number of S/R cycles in between reads
+    :param form_settings: form settings in [AVDD_WR, AVDD_WL, cycle, times]
+    :param set_settings: set settings in [AVDD_WR, AVDD_WL, cycle, times]
+    :param reset_settings: reset settings in [AVDD_WR, AVDD_WL, cycle, times]
+    :return: nothing, saved to npy file
     """
-
-    if module == '': module = 0
-    else:            module = int(module)
-
-    if addr == '': addr = 200
-    else:          addr = int(addr)
 
     RRAM.module(action='set', target=str(module), verbal=False)
+
+    if form_settings != None:
+        RRAM.conf_form(*[str(param) for param in form_settings])
+        RRAM.form(level='module', number='0', verbal=False)
+
+    #set read, set, reset parameters
     RRAM.conf_read(cycle='5', verbal=False)
-    cal = RRAM.adc(action='set', action_type='cal', target='0', verbal=False)
-    hbias = RRAM.adc(action='set', action_type='hbias', target='0', verbal=False)
+    RRAM.conf_set(*[str(param) for param in set_settings])
+    RRAM.conf_reset(*[str(param) for param in reset_settings])
 
-    RRAM.conf_set(AVDD_WR=str(2200), AVDD_WL=str(1200), cycle=str(16), times=str(10), verbal=False)
-    RRAM.conf_reset(AVDD_WR=str(2800), AVDD_WL=str(2800), cycle=str(100), times=str(10), verbal=False)
+    #set weird adc settings to 0
+    RRAM.adc(action='set', action_type='cal', target='0', verbal=False)
+    RRAM.adc(action='set', action_type='hbias', target='0', verbal=False)
 
-    VTGT = 200
-    Board.DAC.set_source(value=str(VTGT), target='VTGT_BL', verbal=False)
-    # refs = references(module=module, col=addr, VTGT=VTGT)
+    #set target bitline voltage 2-200mV
+    Board.DAC.set_source(value="200", target='VTGT_BL', verbal=False)
 
-    RRAM.conf_ADC(offset='5', step='8')
+    #holds cell responsiveness data in cycle: status form
+    cell_data = {}
 
-    total = int(1e3)
-    #cycles between reads
-    batch_size = int(1e2)
-    batch_num = total // batch_size
-    status = np.zeros(shape=(batch_num, 256, 3))
+    results = {"module": module, "status": cell_data,
+               "form_settings": form_settings}
 
-    start = time.time()
-    for batch in range(batch_num):
+    np.save("Data/end_m" + str(module) + "_c" + str(stop), results)
+
+    #cycle the module
+
+    num_cycle = 0
+
+    start_time = time.time()
+
+    while num_cycle < stop:
         for _ in range(batch_size):
-            RRAM.set(level='col', number=str(addr), verbal=False)
-            RRAM.reset(level='col', number=str(addr), verbal=False)
+            RRAM.set(level='col', number='0', verbal=False)
+            RRAM.reset(level='col', number='0', verbal=False)
+        num_cycle += batch_size
+        status = np.ndarray(shape=(256, 256), dtype=dict)
+        # check the cells
+        num_failed=0
+        for row in range(len(status)):
+            col = 0
+            address = row * 256 + col
+            if status[row][col] == None:
+                status[row][col] = dict()
+            status[row][col]['dead'], status[row][col]['lrs'], status[row][col]['hrs'] = check(address)
+            if status[row][col]['dead']:
+                num_failed +=1
+        cell_data[num_cycle] = status
+        np.save("Data/end_m" + str(module) + "_c" + str(stop), results)
+        print(f"Batch {num_cycle // batch_size} of {stop // batch_size} done.\nTotal Time: {time.time()-start_time}s.\nNumber of failed cells: {num_failed}")
+    np.save("Data/end_m" + str(module) + "_c" + str(stop), results)
 
-        for row in range(256):
-            address = row * 256 + addr
-            status[batch][row] = check(addr=address)
-            print (status[batch][row])
 
-        duration = time.time() - start
-        rate = (batch * batch_size + batch_size) / duration
-        stuck = np.sum(status[batch] > 0)
-        print ('switch / sec: %f | stuck devices: %d/%d' % (rate, stuck, 256))
-
-        results = {'batch': batch, 'status': status}
-        np.save('endurance', results)
 
 ##########################################################
 
@@ -127,7 +141,6 @@ def SAF(module, form_settings=[4000, 1700, 100, 1]):
     start_time = time.time()
 
     #cycle the module
-    RRAM.set_reset(level='module', number='0', times='1', verbal=False)
     results = {"module": module,  "status": status,
                "form_settings": form_settings}
     np.save("Data/saf_m" + str(module) + "_c" + str(numCycles), results)
@@ -228,13 +241,21 @@ def decode(argList):
     parser = argparse.ArgumentParser()
     parser.add_argument("command", help="The method/test you desire to run")
     parser.add_argument("module", type=int, help="Module to run test on")
-    parser.add_argument("-f", "--conf_form", type=int, nargs=4, help="Arguments to pass to conf_form")
-    parser.add_argument("-r", "--resistance",type=int, help="#Cells to measure resistance for")
+    parser.add_argument("-f", "--conf_form", type=int, nargs=4, help="Arguments to pass to conf_form", default=None)
+    parser.add_argument("-n", "--num_cycles", type=int, help="#S/R cycles total", default=1000000)
+    parser.add_argument("-b", "--batch_size", type=int, help="#S/R cycles between checking cell health", default=5000)
+    parser.add_argument('-s', '--conf_set', type=int, nargs=4, help="Arguments to pass to conf_set", default=[2200, 1200, 16, 10])
+    parser.add_argument('-r', '--conf_reset', type=int, nargs=4, help="Arguments to pass to conf_reset", default=[2800, 2800, 100, 10])
     args = parser.parse_args(argList)
     if args.command == "SAF":
         if args.conf_form:
             SAF(args.module, args.conf_form)
         else:
             SAF(args.module)
+    elif args.command == "ENDURANCE":
+        endurance(args.module, args.num_cycles, args.batch_size, args.conf_form, args.conf_set, args.conf_reset)
+
+
+
 
 
