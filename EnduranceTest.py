@@ -32,7 +32,7 @@ def check(addr):
     #########################################
     return dead, lrs, hrs
 
-def endurance(module, stop = 1000000, batch_size = 5000, form_settings=None, set_settings = [2200, 1200, 16, 10], reset_settings = [2800, 2800, 100, 10]):
+def endurance(module, col, stop = 1000000, batch_size = 5000, form_settings=None, set_settings = [2200, 1200, 16, 10], reset_settings = [2800, 2800, 100, 10]):
     """
     perform endurance testing on specified module
     :param module: module to test
@@ -54,6 +54,9 @@ def endurance(module, stop = 1000000, batch_size = 5000, form_settings=None, set
     RRAM.conf_read(cycle='5', verbal=False)
     RRAM.conf_set(*[str(param) for param in set_settings])
     RRAM.conf_reset(*[str(param) for param in reset_settings])
+
+    # configure ADC
+    RRAM.conf_ADC(offset=str(10), step=str(10), comp='0x7FFF', verbal=False)
 
     #set weird adc settings to 0
     RRAM.adc(action='set', action_type='cal', target='0', verbal=False)
@@ -78,14 +81,13 @@ def endurance(module, stop = 1000000, batch_size = 5000, form_settings=None, set
 
     while num_cycle < stop:
         for _ in range(batch_size):
-            RRAM.set(level='col', number='0', verbal=False)
-            RRAM.reset(level='col', number='0', verbal=False)
+            RRAM.set(level='col', number=str(col), verbal=False)
+            RRAM.reset(level='col', number=str(col), verbal=False)
         num_cycle += batch_size
         status = np.ndarray(shape=(256, 256), dtype=dict)
         # check the cells
         num_failed=0
         for row in range(len(status)):
-            col = 0
             address = row * 256 + col
             if status[row][col] == None:
                 status[row][col] = dict()
@@ -218,12 +220,6 @@ def MR(module, numSamples):
 
     np.save("Data/delta_res_m" + str(module) + "_s" + str(numSamples), results)
 
-
-
-
-
-
-
 def main(addr=0, nrow=1, ncol=1, ncycles=-1):
     """
     Main method for performing endurance testing.
@@ -241,6 +237,7 @@ def decode(argList):
     parser = argparse.ArgumentParser()
     parser.add_argument("command", help="The method/test you desire to run")
     parser.add_argument("module", type=int, help="Module to run test on")
+    parser.add_argument("col",    type=int, help="Column to run test on")
     parser.add_argument("-f", "--conf_form", type=int, nargs=4, help="Arguments to pass to conf_form", default=None)
     parser.add_argument("-n", "--num_cycles", type=int, help="#S/R cycles total", default=1000000)
     parser.add_argument("-b", "--batch_size", type=int, help="#S/R cycles between checking cell health", default=5000)
@@ -253,7 +250,7 @@ def decode(argList):
         else:
             SAF(args.module)
     elif args.command == "ENDURANCE":
-        endurance(args.module, args.num_cycles, args.batch_size, args.conf_form, args.conf_set, args.conf_reset)
+        endurance(args.module, args.col, args.num_cycles, args.batch_size, args.conf_form, args.conf_set, args.conf_reset)
 
 
 

@@ -1,4 +1,4 @@
-import CommandMap as CM
+import Lib.CommandMap as CM
 import PyTerminal as PT
 
 def in_clear(verbal=True):
