@@ -1,6 +1,6 @@
 from datetime import datetime
 from tkinter import Tk, filedialog
-import CommandMap as CM
+import Lib.CommandMap as CM
 import PyTerminal as PT
 
 

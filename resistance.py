@@ -6,7 +6,6 @@ import numpy as np
 import sys
 
 import Board.DAC
-import DAC
 from Lib import RRAM
 
 def resistance(addr, refs, VTGT):
