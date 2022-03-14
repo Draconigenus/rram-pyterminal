@@ -13,6 +13,7 @@ import Board.DF as DF
 import Board.DAC as DAC
 import Board.TC as TC
 import Board.BOARD as BOARD
+import platform
 
 VID = '0x03EB'    # Atmel
 PID = '0x204B'    # LUFA USB to Serial Demo Application
@@ -28,7 +29,8 @@ def connect():
     for port in list_ports.comports():
         if port.vid == int(VID, 0) and port.pid == int(PID, 0):
             global ser
-            ser = serial.Serial("/dev/" + port.name, baudrate=BAUDRATE, timeout=TIMEOUT)
+            if "Linux" in platform.platform(): ser = serial.Serial("/dev/" + port.name, baudrate=BAUDRATE, timeout=TIMEOUT)
+            else:                              ser = serial.Serial(          port.name, baudrate=BAUDRATE, timeout=TIMEOUT)
 
             # print (port.name)
             version = BOARD.version(False)

@@ -1,6 +1,7 @@
 import EnduranceTest
 import PyTerminal as PT
 from EnduranceTest import *
+from READ import READ
 
 def example_function():
     """ Example function
@@ -18,4 +19,5 @@ def decode(parameters):
     parameters = list(filter(None, parameters))
     if   parameters[1] == 'example_function'  : example_function()
     if   parameters[1] == "ENDURANCE"         : EnduranceTest.decode(parameters[2:])
+    if   parameters[1] == 'READ'              : READ (parameters[2], parameters[3], parameters[4] )
     else: PT.unknown(parameters)

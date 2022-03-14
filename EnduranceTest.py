@@ -32,7 +32,7 @@ def check(addr):
     #########################################
     return dead, lrs, hrs
 
-def endurance(module, col, stop = 1000000, batch_size = 5000, form_settings=None, set_settings = [2200, 1200, 16, 10], reset_settings = [2800, 2800, 100, 10]):
+def endurance(module, col, stop = 1000000, batch_size = 5000, form_settings=None, set_settings = [2200, 1500, 2, 1], reset_settings = [2400, 2400, 32, 4]):
     """
     perform endurance testing on specified module
     :param module: module to test
@@ -56,7 +56,7 @@ def endurance(module, col, stop = 1000000, batch_size = 5000, form_settings=None
     RRAM.conf_reset(*[str(param) for param in reset_settings])
 
     # configure ADC
-    RRAM.conf_ADC(offset=str(10), step=str(10), comp='0x7FFF', verbal=False)
+    RRAM.conf_ADC(offset=str(17), step=str(8), comp='0x7FFF', verbal=False)
 
     #set weird adc settings to 0
     RRAM.adc(action='set', action_type='cal', target='0', verbal=False)
@@ -82,7 +82,19 @@ def endurance(module, col, stop = 1000000, batch_size = 5000, form_settings=None
     while num_cycle < stop:
         for _ in range(batch_size):
             RRAM.set(level='col', number=str(col), verbal=False)
+
+            RRAM.conf_reset(AVDD_WR=str(  set_settings[0]), 
+                            AVDD_WL=str(  set_settings[1]),
+                            cycle  =str(reset_settings[2]),
+                            times  =str(reset_settings[3]))
             RRAM.reset(level='col', number=str(col), verbal=False)
+
+            RRAM.conf_reset(AVDD_WR=str(reset_settings[0]), 
+                            AVDD_WL=str(reset_settings[1]),
+                            cycle  =str(reset_settings[2]),
+                            times  =str(reset_settings[3]))
+            RRAM.reset(level='col', number=str(col), verbal=False)
+
         num_cycle += batch_size
         status = np.ndarray(shape=(256, 256), dtype=dict)
         # check the cells
@@ -93,7 +105,7 @@ def endurance(module, col, stop = 1000000, batch_size = 5000, form_settings=None
                 status[row][col] = dict()
             status[row][col]['dead'], status[row][col]['lrs'], status[row][col]['hrs'] = check(address)
             if status[row][col]['dead']:
-                num_failed +=1
+                num_failed += 1
         cell_data[num_cycle] = status
         np.save("Data/end_m" + str(module) + "_c" + str(stop), results)
         print(f"Batch {num_cycle // batch_size} of {stop // batch_size} done.\nTotal Time: {time.time()-start_time}s.\nNumber of failed cells: {num_failed}")
