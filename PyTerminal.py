@@ -1,6 +1,8 @@
 import serial
 import Lib.CommandMap as CM
-import Applications.MNIST, Lib.TEST, USER
+import Applications.MNIST as MNIST
+import Lib.TEST as TEST
+import USER
 import Lib.DEMO as DEMO
 import Lib.UTF8 as UTF8
 import Lib.RRAM as RRAM
@@ -28,7 +30,7 @@ def connect():
     for port in list_ports.comports():
         if port.vid == int(VID, 0) and port.pid == int(PID, 0):
             global ser
-            ser = serial.Serial("/dev/" + port.name, baudrate=BAUDRATE, timeout=TIMEOUT)
+            ser = serial.Serial("" + port.name, baudrate=BAUDRATE, timeout=TIMEOUT)
 
             # print (port.name)
             version = BOARD.version(False)
