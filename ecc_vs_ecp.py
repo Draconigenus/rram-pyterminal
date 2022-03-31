@@ -2,6 +2,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+rates = sorted([0.0002411, 0.00244], reverse=True)
+arrays = [[rate, np.random.choice(a=[0, 1], p=[1 - rate, rate], replace=True, size=(256, 256))] for rate in rates]
+
 p1 = 0.002411
 array1 = np.random.choice(a=[0, 1], p=[1 - p1, p1], replace=True, size=(256, 256))
 p2 = 0.000244
@@ -20,7 +23,7 @@ def plotECC():
 	plt.figure(figsize=(5.0625, 2.6534))
 	x = ECCs[:, 1] / (ECCs[:, 0] + ECCs[:, 1])
 	x = np.append(x, 0)
-	for rate, array in [[p1, array1], [p2, array2]]:
+	for rate, array in arrays:
 		fault = array.flatten()
 		size = len(fault)
 		yECC = np.zeros_like(x)
@@ -49,7 +52,7 @@ def plotECP():
 	plt.figure(figsize=(5.0625, 2.6534))
 	x = [(1 + ECP + ECP * np.log2(256))/256 for ECP in ECPs]
 	x[0] = 0
-	for rate, array in [[p1, array1], [p2, array2]]:
+	for rate, array in arrays:
 		yECP = np.zeros_like(ECPs)
 		for i, ECP in enumerate(ECPs):
 			for row in array:
@@ -59,6 +62,7 @@ def plotECP():
 		plt.plot(x, yECP, marker= '.', label=f'Fault Rate: {rate * 100:.4f}%', antialiased=False)
 	plt.xlim(0, x[-1] + 0.005)
 	plt.legend()
+	# plt.yscale('log')
 	# plt.show()
 	plt.savefig("Plots/ECPFaultRate.png", dpi=2000)
 
