@@ -193,6 +193,37 @@ def getSAFstatusdivided(filename):
     hrs_stuck_percent = (float(stuck_hrs) / (256 ** 2)) * 100
     return status, stuck_percent, lrs_stuck_percent, hrs_stuck_percent
 
+def listStuckCells(filename):
+    object = np.load(file=filename, allow_pickle=True).item()
+    # extract cells
+    status = np.ndarray(shape=(256, 256), dtype=dict)
+    lrs_average = 0
+    hrs_average = 0
+    num_stuck = 0
+    stuck_cells = []
+    for row in range(len(object['status'])):
+        for column in range(len(object['status'][row])):
+            status[row][column] = object['status'][row][column]
+            if status[row][column]['saf'] == True:
+                stuck_cells.append(((row, column), status[row][column]))
+                num_stuck += 1
+            else:
+                lrs_average += status[row][column]['lrs']
+                hrs_average += status[row][column]['hrs']
+    n_alive = (256 ** 2) - num_stuck
+    lrs_average /= n_alive
+    hrs_average /= n_alive
+
+    stuck_lrs = 0
+    stuck_hrs = 0
+    #check closeness to average
+    for cell in stuck_cells:
+        average_adc = np.average([cell[1]['lrs'],cell[1]['hrs']])
+        if np.abs(average_adc - lrs_average) < np.abs(average_adc - hrs_average):
+            print(f"Address: {cell[0][0] * 256 + cell[0][1]}, Stuck in  LRS")
+        else:
+            print(f"Address: {cell[0][0] * 256 + cell[0][1]}, Stuck in  HRS")
+
 def combinePlots():
     files = ["Data/saf_m16_c1.npy",
              "Data/saf_m26_c1.npy",

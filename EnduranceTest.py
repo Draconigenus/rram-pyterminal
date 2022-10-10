@@ -237,7 +237,7 @@ def decode(argList):
     parser = argparse.ArgumentParser()
     parser.add_argument("command", help="The method/test you desire to run")
     parser.add_argument("module", type=int, help="Module to run test on")
-    parser.add_argument("col",    type=int, help="Column to run test on")
+    parser.add_argument("-c" "--column", type=int, help="Column to run test on", default=0)
     parser.add_argument("-f", "--conf_form", type=int, nargs=4, help="Arguments to pass to conf_form", default=None)
     parser.add_argument("-n", "--num_cycles", type=int, help="#S/R cycles total", default=1000000)
     parser.add_argument("-b", "--batch_size", type=int, help="#S/R cycles between checking cell health", default=5000)
